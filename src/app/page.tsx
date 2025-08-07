@@ -1,5 +1,5 @@
 "use client";
-import './styles/globals.css'
+import '../styles/globals.css'
 import { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
