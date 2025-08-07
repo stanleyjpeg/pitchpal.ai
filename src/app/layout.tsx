@@ -1,9 +1,8 @@
-import '../styles/globals.css'
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { DarkModeToggle } from "../components/DarkModeToggle";
+import "../styles/globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,6 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://pitchpal-ai-five.vercel.app"),
   title: "PitchPal – AI Product Pitch Generator",
   description: "Generate short, confident product pitches, voiceovers, and video previews for your e-commerce products with AI.",
   openGraph: {
@@ -47,9 +47,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <ClerkProvider>
       <html lang="en">
-        <head>
-          <meta name="description" content="Generate short, confident product pitches, voiceovers, and video previews for your e-commerce products with AI." />
-        </head>
         <body className="bg-background text-foreground min-h-screen">
           <DarkModeToggle />
           {children}
