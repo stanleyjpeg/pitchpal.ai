@@ -3,12 +3,10 @@
 import { useState } from "react";
 import VoiceSelector, { voiceOptions } from "@/components/VoiceSelector";
 
-// ✅ Declare the correct type
 type Pitch = {
-  id: string; // or `number` if that's how your Supabase table is set
+  id: string;
   result: string;
 };
-
 
 export default function Dashboard({ pitches }: { pitches: Pitch[] }) {
   const [voiceId, setVoiceId] = useState(voiceOptions[0].id);
