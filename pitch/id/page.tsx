@@ -12,11 +12,10 @@ interface Pitch {
 }
 
 export default function PublicPitchPage() {
-  const params = useParams();
-  const id = typeof params === "object" && params !== null && "id" in params ? (params.id as string) : undefined;
+  const { id } = useParams() as { id: string };
   const [pitch, setPitch] = useState<Pitch | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [voiceId, setVoiceId] = useState(voiceOptions[0].id);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [voiceId, setVoiceId] = useState<string>(voiceOptions?.[0]?.id ?? "default-voice");
 
   useEffect(() => {
     const fetchPitch = async () => {
@@ -40,7 +39,7 @@ export default function PublicPitchPage() {
   if (loading) return <p className="p-4">Loading pitch...</p>;
   if (!pitch) return <p className="p-4 text-red-500">Pitch not found</p>;
 
-  const encodedText = encodeURIComponent(pitch.result);
+  const encodedText = encodeURIComponent(pitch.result ?? "");
   const audioUrl = `/api/voice?text=${encodedText}&voiceId=${voiceId}`;
 
   return (

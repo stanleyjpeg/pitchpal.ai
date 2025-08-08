@@ -991,16 +991,9 @@ function HomeContent() {
 //
 export default function Home() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-50 via-white to-indigo-100 dark:from-zinc-900 dark:via-zinc-950 dark:to-indigo-950">
-          <div className="text-zinc-600 dark:text-zinc-300" aria-live="polite" aria-busy="true">
-            Loading...
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<div>Loading...</div>}>
       <HomeContent />
     </Suspense>
   );
 }
+

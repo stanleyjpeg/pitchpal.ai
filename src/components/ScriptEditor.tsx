@@ -39,7 +39,7 @@ export default function ScriptEditor() {
 
       const data = await res.json();
       setScript(data.result);
-      setSavedId(null); // Mark as unsaved after regeneration
+      setSavedId(null); // Clear saved ID after changing script
     } catch (err) {
       console.error("❌ AI generation error:", err);
       alert("Something went wrong.");
@@ -54,7 +54,8 @@ export default function ScriptEditor() {
       const saved = await savePitchToSupabase(script);
       if (saved?.id) {
         setSavedId(saved.id);
-        router.push(`/pitch/${saved.id}`); // optional: auto-redirect
+        // Optional redirect:
+        // router.push(`/pitch/${saved.id}`);
       }
     } catch (err) {
       console.error("❌ Save error:", err);
@@ -105,8 +106,19 @@ export default function ScriptEditor() {
         </button>
       </div>
 
-      {loading && (
-        <p className="mt-3 text-sm text-gray-500">⏳ Working...</p>
+      {loading && <p className="mt-3 text-sm text-gray-500">⏳ Working...</p>}
+
+      {savedId && (
+        <div className="mt-4">
+          <a
+            href={`/pitch/${savedId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block bg-zinc-800 text-white px-4 py-2 rounded hover:bg-zinc-700"
+          >
+            🔗 View & Share Pitch
+          </a>
+        </div>
       )}
     </section>
   );
