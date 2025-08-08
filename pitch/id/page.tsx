@@ -5,10 +5,16 @@ import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { voiceOptions } from "@/components/VoiceSelector";
 
+interface Pitch {
+  id: string;
+  result: string;
+  // Add other fields if needed
+}
+
 export default function PublicPitchPage() {
   const params = useParams();
-  const id = typeof params === "object" && params !== null ? (params as Record<string, string | string[]>).id : undefined;
-  const [pitch, setPitch] = useState<any>(null);
+  const id = typeof params === "object" && params !== null && "id" in params ? (params.id as string) : undefined;
+  const [pitch, setPitch] = useState<Pitch | null>(null);
   const [loading, setLoading] = useState(true);
   const [voiceId, setVoiceId] = useState(voiceOptions[0].id);
 
