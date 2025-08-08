@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import VoiceSelector, { voiceOptions } from "@/components/VoiceSelector";
+import { cookies } from "next/headers";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import Dashboard from "./DashboardClient";
+import type { Database } from "@/lib/database.types"; // adjust if needed
 
 type Pitch = {
   id: string;
