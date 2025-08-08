@@ -1,11 +1,30 @@
-import Dashboard from "@/components/dashboard";
-import { supabase } from "@/lib/supabase";
+// app/dashboard/page.tsx
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import Dashboard from "./DashboardClient"; // ✅ adjust if file is in /components
 
 export default async function DashboardPage() {
-  const { data: pitches, error } = await supabase.from("pitches").select("*");
+  const supabase = createServerComponentClient({ cookies: () => cookies() });
+
+  // Get the current session
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    console.error("Error fetching session:", sessionError);
+  }
+
+  // Fetch pitches for this user
+  const { data: pitches, error } = await supabase
+    .from("pitches")
+    .select("*")
+    .eq("user_id", session?.user?.id)
+    .order("created_at", { ascending: false });
 
   if (error) {
-    return <div className="p-6 text-red-500">Error loading pitches</div>;
+    console.error("Error fetching pitches:", error);
   }
 
   return <Dashboard pitches={pitches || []} />;

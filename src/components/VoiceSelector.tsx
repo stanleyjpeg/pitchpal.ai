@@ -1,12 +1,9 @@
-"use client";
-import { useState } from "react";
-
 export const voiceOptions = [
-  { id: "EXAVITQu4vr4xnSDxMaL", name: "Default (Rachel – Female US)" },
-  { id: "21m00Tcm4TlvDq8ikWAM", name: "Domi (Male US)" },
-  { id: "AZnzlk1XvdvUeBnXmlld", name: "Bella (British Female)" },
-  { id: "TxGEqnHWrfWFTfGW9XjX", name: "Antoni (Polish Male)" },
-  { id: "ErXwobaYiN019PkySvjV", name: "Elli (Childish)" },
+  { id: "en_us_001", label: "Standard Male" },
+  { id: "en_us_002", label: "Standard Female" },
+  { id: "en_us_ghostface", label: "Ghostface" },
+  { id: "en_us_snoopdogg", label: "Snoop Dogg" },
+  // Add more voices if needed
 ];
 
 export default function VoiceSelector({
@@ -18,16 +15,15 @@ export default function VoiceSelector({
 }) {
   return (
     <select
-      className="border p-2 rounded text-black"
       value={selected}
       onChange={(e) => onChange(e.target.value)}
+      className="border rounded px-3 py-1 dark:bg-zinc-900"
     >
       {voiceOptions.map((voice) => (
         <option key={voice.id} value={voice.id}>
-          {voice.name}
+          {voice.label}
         </option>
       ))}
     </select>
   );
 }
-
