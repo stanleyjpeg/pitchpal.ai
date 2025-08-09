@@ -949,7 +949,12 @@ function HomeContent() {
   // JSX OUTPUT
   //
   return (
-    <div className="min-h-dvh h-dvh w-full flex flex-col items-center justify-center bg-gradient-to-br from-zinc-50 via-white to-indigo-100 dark:from-zinc-900 dark:via-zinc-950 dark:to-indigo-950 px-4">
+    <div className="relative min-h-dvh h-dvh w-full flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#0b021f] via-[#120233] to-[#1f0a4a] px-4">
+      {/* Decorative background */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-24 -left-24 h-[60vh] w-[60vh] rounded-full blur-3xl opacity-30" style={{ background: 'radial-gradient(closest-side, #7c3aed, transparent)' }} />
+        <div className="absolute -bottom-24 -right-24 h-[60vh] w-[60vh] rounded-full blur-3xl opacity-20" style={{ background: 'radial-gradient(closest-side, #a78bfa, transparent)' }} />
+      </div>
       {/* Banner */}
       {!showOnboarding && showBanner && (
         <motion.div
