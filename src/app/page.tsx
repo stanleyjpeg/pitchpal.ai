@@ -949,7 +949,7 @@ function HomeContent() {
   // JSX OUTPUT
   //
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-zinc-50 via-white to-indigo-100 dark:from-zinc-900 dark:via-zinc-950 dark:to-indigo-950 px-4 py-10">
+    <div className="min-h-dvh h-dvh w-full flex flex-col items-center justify-center bg-gradient-to-br from-zinc-50 via-white to-indigo-100 dark:from-zinc-900 dark:via-zinc-950 dark:to-indigo-950 px-4">
       {/* Banner */}
       {!showOnboarding && showBanner && (
         <motion.div
@@ -999,7 +999,7 @@ function HomeContent() {
       {/* Main pitch form container */}
       <div
         id="pitchpal-form"
-        className="w-full max-w-lg bg-white/90 dark:bg-zinc-900/90 rounded-3xl shadow-2xl p-10 flex flex-col gap-10 border border-zinc-200 dark:border-zinc-800 backdrop-blur-md"
+        className="w-full h-full max-w-none bg-white/90 dark:bg-zinc-900/90 rounded-none shadow-none p-6 sm:p-10 flex flex-col gap-10 border-0 backdrop-blur-md"
       >
         <AnimatePresence initial={false}>
           {showOnboarding && <OnboardingModal onClose={handleCloseOnboarding} />}
