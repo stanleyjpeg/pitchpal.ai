@@ -1,36 +1,21 @@
 "use client";
-import App from "../components/app";
 
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  useRef,
-  Suspense,
-} from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../lib/supabase";
-import {
-  useUser,
-  useAuth,
-} from "@clerk/nextjs";
-import { useSearchParams } from "next/navigation";
+import { useUser, useAuth } from "@clerk/nextjs";
+import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 
-// Accept all debug changes: Remove invalid useState at top-level, move ProModal open state into HomeContent
+// Dynamically import ProModal and icons with SSR disabled for smaller bundles
 const ProModal = dynamic(() => import("../components/ProModal"), { ssr: false });
-
-// Import icons dynamically for smaller bundle & disable SSR
 const FaTwitter = dynamic(() => import("react-icons/fa").then(mod => mod.FaTwitter), { ssr: false });
 const FaGithub = dynamic(() => import("react-icons/fa").then(mod => mod.FaGithub), { ssr: false });
 const FaGlobe = dynamic(() => import("react-icons/fa").then(mod => mod.FaGlobe), { ssr: false });
 const FaSpinner = dynamic(() => import("react-icons/fa").then(mod => mod.FaSpinner), { ssr: false });
 
-//
 // Constants
-//
 const TONES = ["Confident", "Playful", "Persuasive", "Chill"] as const;
 const PLATFORMS = ["TikTok", "IG Reels", "Landing Page"] as const;
 const LENGTHS = ["15s", "30s", "45s"] as const;
@@ -42,51 +27,45 @@ const VOICE_STYLES = [
 ];
 const FREE_EXPORT_LIMIT = 3;
 
-//
-// LocalStorage hook, safe for SSR (no window on server)
-//
-function useLocalStorage<T>(key: string, initialValue: T): [T, (v: T) => void] {
+// LocalStorage hook with SSR safety
+function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
   const [value, setValue] = useState<T>(() => {
     if (typeof window === "undefined") return initialValue;
     try {
       const stored = window.localStorage.getItem(key);
-      return stored ? (JSON.parse(stored) as T) : initialValue;
+      return stored ? JSON.parse(stored) as T : initialValue;
     } catch {
       return initialValue;
     }
   });
 
-  const setStoredValue = useCallback(
-    (val: T) => {
-      try {
-        setValue(val);
-        if (typeof window !== "undefined") {
-          window.localStorage.setItem(key, JSON.stringify(val));
-        }
-      } catch {
-        // ignore errors
+  const setStoredValue = useCallback((val: T) => {
+    try {
+      setValue(val);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(key, JSON.stringify(val));
       }
-    },
-    [key]
-  );
+    } catch {
+      // Ignore errors
+    }
+  }, [key]);
 
   return [value, setStoredValue];
 }
 
-//
-// API error handling utility
-//
-function handleApiError(error: any, fallback: string): string {
-  if (error?.message) return error.message;
-  if (error?.status === 429) return "Rate limit exceeded. Please try again later.";
-  if (error?.status === 401) return "Please sign in to continue.";
-  if (error?.status === 403) return "Access denied. Please check your subscription.";
+// API error handler returning user-friendly messages
+type ApiLikeError = { message?: string; status?: number } | null | undefined;
+
+function handleApiError(error: unknown, fallback: string): string {
+  const err = (error as ApiLikeError) ?? undefined;
+  if (err && typeof err === "object" && typeof err.message === "string") return err.message;
+  if (err && typeof err === "object" && err.status === 429) return "Rate limit exceeded. Please try again later.";
+  if (err && typeof err === "object" && err.status === 401) return "Please sign in to continue.";
+  if (err && typeof err === "object" && err.status === 403) return "Access denied. Please check your subscription.";
   return fallback;
 }
 
-//
-// Benefit component
-//
+// Benefit UI component with icon and text
 function Benefit({ icon, text }: { icon: string; text: string }) {
   return (
     <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl px-4 py-2 text-base font-medium shadow-sm">
@@ -95,6 +74,23 @@ function Benefit({ icon, text }: { icon: string; text: string }) {
     </div>
   );
 }
+
+export {
+  useLocalStorage,
+  handleApiError,
+  Benefit,
+  TONES,
+  PLATFORMS,
+  LENGTHS,
+  VOICE_STYLES,
+  FREE_EXPORT_LIMIT,
+  ProModal,
+  FaTwitter,
+  FaGithub,
+  FaGlobe,
+  FaSpinner,
+};
+
 
 //
 // HowItWorks Step component
@@ -141,7 +137,7 @@ function Testimonial({
         }}
         aria-hidden="true"
       />
-      <blockquote className="italic text-zinc-700 dark:text-zinc-200 text-base mb-1">"{quote}"</blockquote>
+      <blockquote className="italic text-zinc-700 dark:text-zinc-200 text-base mb-1">&ldquo;{quote}&rdquo;</blockquote>
       <div className="font-semibold text-indigo-600 text-sm">{name}</div>
     </div>
   );
@@ -189,7 +185,7 @@ function OnboardingModal({ onClose }: { onClose: () => void }) {
       transition={{ duration: 0.25 }}
     >
       <motion.div
-        className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-8 max-w-sm w-full flex flex-col items-center gap-6"
+        className="bg-white dark:bg-zinc-900 rounded-none shadow-none p-8 max-w-none w-full h-full flex flex-col items-center justify-center gap-6"
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
@@ -270,7 +266,7 @@ function LimitModal({
       <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-8 max-w-sm w-full flex flex-col items-center gap-6 text-center">
         <h2 id="limit-title" className="text-xl font-bold mb-2">Free Limit Reached</h2>
         <p>
-          You've reached your free export limit. Upgrade to PitchPal Pro for unlimited
+          You&apos;ve reached your free export limit. Upgrade to PitchPal Pro for unlimited
           access!
         </p>
         <motion.button
@@ -412,10 +408,10 @@ function ScriptOutput({
   videoSupabaseUrl,
 }: ScriptOutputProps) {
   // Refs to inputs for focus management
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const inputRefs = React.useRef<(HTMLInputElement | null)[]>([]);
 
   // Focus first line input on mount or script update
-  useEffect(() => {
+  React.useEffect(() => {
     if (script.length > 0) {
       inputRefs.current[0]?.focus();
     }
@@ -632,7 +628,7 @@ function HomeContent() {
   const [videoSupabaseUrl, setVideoSupabaseUrl] = useState<string | null>(null);
 
   // Referral URL memo
-  const referralUrl = useMemo(() => {
+  const referralUrl = React.useMemo(() => {
     if (typeof window === "undefined") return "";
     return `${window.location.origin}/?ref=${userId !== "anon" ? userId : "your-id"}`;
   }, [userId]);
@@ -641,10 +637,10 @@ function HomeContent() {
   const isFreeLimitReached = !isPro && exportCount >= FREE_EXPORT_LIMIT;
 
   // Mark component mounted for client-only logic
-  useEffect(() => setMounted(true), []);
+  React.useEffect(() => setMounted(true), []);
 
   // Show onboarding modal if needed
-  useEffect(() => {
+  React.useEffect(() => {
     if (mounted && !onboardingComplete) {
       setShowOnboarding(true);
     }
@@ -663,10 +659,12 @@ function HomeContent() {
 
   // Check pro status from user metadata
   useEffect(() => {
-    if (user?.publicMetadata?.pro) setIsPro(true);
-    else setIsPro(false);
+    const pro = Boolean(
+      (user as { publicMetadata?: { pro?: unknown } } | null | undefined)?.publicMetadata?.pro
+    );
+    setIsPro(pro);
   }, [user]);
-
+  
   // Referral tracking (can be moved to backend)
   useEffect(() => {
     async function trackReferral() {
@@ -684,9 +682,9 @@ function HomeContent() {
       }
     }
     trackReferral();
-  }, [user, userId, mounted, searchParams]);
-
-  // Handlers for UI events
+    // Only include stable and relevant dependencies to avoid unnecessary reruns and type errors
+  }, [mounted, searchParams, user, userId]);
+    // Handlers for UI events
 
   const handleCloseOnboarding = useCallback(() => {
     setShowOnboarding(false);
@@ -989,6 +987,8 @@ function HomeContent() {
 //
 // Export main component wrapped with Suspense fallback
 //
+import { Suspense } from "react";
+
 export default function Home() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
@@ -996,4 +996,6 @@ export default function Home() {
     </Suspense>
   );
 }
+
+// (removed erroneous local useEffect stub)
 
