@@ -175,14 +175,14 @@ function OnboardingModal({ onClose }: { onClose: () => void }) {
     <motion.div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
     >
-      <motion.div
-        className="bg-white dark:bg-zinc-900 rounded-none shadow-none p-8 max-w-none w-full h-full flex flex-col items-center justify-center gap-6"
+        <motion.div
+          className="bg-white dark:bg-zinc-900 rounded-none shadow-none p-8 max-w-none w-full h-full flex flex-col items-center justify-center gap-6"
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
