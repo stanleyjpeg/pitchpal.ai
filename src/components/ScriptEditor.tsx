@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useToast } from "./Toast";
 import { supabase } from "@/lib/supabase";
 // import { useRouter } from "next/navigation";
 
@@ -10,6 +11,7 @@ export default function ScriptEditor() {
   );
   const [loading, setLoading] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const { showToast } = useToast();
   // const router = useRouter();
 
   const savePitchToSupabase = async (result: string) => {
@@ -50,15 +52,17 @@ export default function ScriptEditor() {
       const data = await res.json();
       if (Array.isArray(data.script)) {
         setScript(data.script.join("\n"));
+        showToast({ type: "success", message: "Script generated successfully." });
       } else if (typeof data.result === "string") {
         setScript(data.result);
+        showToast({ type: "success", message: "Script updated." });
       } else {
         throw new Error("Invalid response from generator");
       }
       setSavedId(null); // Clear saved ID after changing script
     } catch (err) {
       console.error("❌ AI generation error:", err);
-      alert("Something went wrong.");
+      showToast({ type: "error", message: "Something went wrong. Please try again." });
     } finally {
       setLoading(false);
     }
@@ -70,11 +74,13 @@ export default function ScriptEditor() {
       const saved = await savePitchToSupabase(script);
       if (saved?.id) {
         setSavedId(saved.id);
+        showToast({ type: "success", message: "Pitch saved. Share your link!" });
         // Optional redirect:
         // router.push(`/pitch/${saved.id}`);
       }
     } catch (err) {
       console.error("❌ Save error:", err);
+      showToast({ type: "error", message: "Save failed. Please try again." });
     } finally {
       setLoading(false);
     }

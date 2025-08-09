@@ -3,6 +3,7 @@ import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { DarkModeToggle } from "../components/DarkModeToggle";
+import { ToastProvider } from "../components/Toast";
 import "../styles/globals.css";
 
 const geistSans = Geist({
@@ -66,8 +67,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </Script>
             </>
           )}
-          <DarkModeToggle />
-          {children}
+          <ToastProvider>
+            <DarkModeToggle />
+            {children}
+          </ToastProvider>
         </body>
       </html>
     </ClerkProvider>
