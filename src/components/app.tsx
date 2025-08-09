@@ -14,7 +14,9 @@ export default function App() {
       <Navbar />
       <Hero />
       <StepProgress step={1} />
-      <ScriptEditor />
+      <div className="max-w-5xl mx-auto w-full p-4 sm:p-6 md:p-8 bg-white/5 rounded-3xl border border-white/10 shadow-2xl backdrop-blur">
+        <ScriptEditor />
+      </div>
       {/* Add Features, Gallery, Testimonials, Rewards */}
     </>
   );

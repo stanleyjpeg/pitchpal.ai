@@ -81,8 +81,8 @@ export default function ScriptEditor() {
   };
 
   return (
-    <section className="max-w-4xl mx-auto p-6 bg-white shadow rounded-lg mt-8">
-      <h2 className="text-xl font-semibold mb-4">🎤 Your Pitch Script</h2>
+    <section className="max-w-4xl mx-auto p-6 bg-white/90 dark:bg-zinc-900/90 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xl">
+      <h2 className="text-2xl font-bold mb-4">🎤 Your Pitch Script</h2>
 
       <textarea
         className="w-full min-h-[140px] p-3 border rounded-md text-gray-800 font-mono"
@@ -93,21 +93,21 @@ export default function ScriptEditor() {
       <div className="flex flex-wrap gap-3 mt-4">
         <button
           onClick={() => handleAIAction("improve")}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="btn-brand px-4 py-2 rounded"
           disabled={loading}
         >
           ✨ Improve
         </button>
         <button
           onClick={() => handleAIAction("regenerate")}
-          className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+          className="btn-outline px-4 py-2 rounded"
           disabled={loading}
         >
           🔁 Regenerate
         </button>
         <button
           onClick={() => handleAIAction("tone")}
-          className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+          className="btn-brand px-4 py-2 rounded"
           disabled={loading}
         >
           🎯 Change Tone
@@ -122,7 +122,13 @@ export default function ScriptEditor() {
         </button>
       </div>
 
-      {loading && <p className="mt-3 text-sm text-gray-500">⏳ Working...</p>}
+      {loading && (
+        <div className="mt-4 space-y-3">
+          <div className="h-4 rounded skeleton skeleton-dark" />
+          <div className="h-4 rounded skeleton skeleton-dark w-5/6" />
+          <div className="h-4 rounded skeleton skeleton-dark w-2/3" />
+        </div>
+      )}
 
       {savedId && (
         <div className="mt-4">
