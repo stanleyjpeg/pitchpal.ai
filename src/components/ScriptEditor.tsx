@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 
 export default function ScriptEditor() {
   const [script, setScript] = useState(
@@ -10,9 +10,13 @@ export default function ScriptEditor() {
   );
   const [loading, setLoading] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
-  const router = useRouter();
+  // const router = useRouter();
 
   const savePitchToSupabase = async (result: string) => {
+    if (!supabase) {
+      alert("Storage is not configured.");
+      return null;
+    }
     const { data, error } = await supabase
       .from("pitches")
       .insert([{ result }])
@@ -27,18 +31,30 @@ export default function ScriptEditor() {
     return data;
   };
 
-  const handleAIAction = async (action: string) => {
+  const handleAIAction = async (_action: string) => {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/script", {
+      const res = await fetch("/api/generate-script", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input: script, action }),
+        body: JSON.stringify({
+          productUrl: "",
+          description: script,
+          tone: "Confident",
+          platform: "Landing Page",
+          length: "30s",
+        }),
       });
 
       const data = await res.json();
-      setScript(data.result);
+      if (Array.isArray(data.script)) {
+        setScript(data.script.join("\n"));
+      } else if (typeof data.result === "string") {
+        setScript(data.result);
+      } else {
+        throw new Error("Invalid response from generator");
+      }
       setSavedId(null); // Clear saved ID after changing script
     } catch (err) {
       console.error("❌ AI generation error:", err);

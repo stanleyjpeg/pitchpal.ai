@@ -1,18 +1,16 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-// Load from environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Read from environment variables (may be undefined at build time on some hosts)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-// 🔒 Validate env variables
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Missing Supabase URL or Anon Key in .env.local");
+// Create client only when both env vars are present
+export const supabase: SupabaseClient | null =
+  supabaseUrl && supabaseAnonKey
+    ? createClient(supabaseUrl, supabaseAnonKey)
+    : null;
+
+if (!supabase && process.env.NODE_ENV !== "production") {
+  // Avoid throwing at import time to keep the app buildable without envs
+  console.warn("Supabase env vars are missing; uploads will be skipped.");
 }
-
-// ✅ Optional: Log only in development
-if (process.env.NODE_ENV === "development") {
-  console.log("✅ Supabase connected:", supabaseUrl);
-}
-
-// ✅ Export Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);

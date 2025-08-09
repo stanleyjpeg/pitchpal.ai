@@ -7,6 +7,8 @@ import { supabase } from "../lib/supabase";
 import { useUser, useAuth } from "@clerk/nextjs";
 import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
+import DOMPurify from "isomorphic-dompurify";
+import { track } from "../lib/analytics";
 
 // Dynamically import ProModal and icons with SSR disabled for smaller bundles
 const ProModal = dynamic(() => import("../components/ProModal"), { ssr: false });
@@ -53,6 +55,16 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => voi
   return [value, setStoredValue];
 }
 
+// Simple in-memory rate limiter per action key
+const lastActionAt: Record<string, number> = {};
+function canPerform(action: string, minMs = 2500): boolean {
+  const now = Date.now();
+  const prev = lastActionAt[action] ?? 0;
+  if (now - prev < minMs) return false;
+  lastActionAt[action] = now;
+  return true;
+}
+
 // API error handler returning user-friendly messages
 type ApiLikeError = { message?: string; status?: number } | null | undefined;
 
@@ -75,21 +87,7 @@ function Benefit({ icon, text }: { icon: string; text: string }) {
   );
 }
 
-export {
-  useLocalStorage,
-  handleApiError,
-  Benefit,
-  TONES,
-  PLATFORMS,
-  LENGTHS,
-  VOICE_STYLES,
-  FREE_EXPORT_LIMIT,
-  ProModal,
-  FaTwitter,
-  FaGithub,
-  FaGlobe,
-  FaSpinner,
-};
+// Note: Do not export arbitrary symbols from app/page.tsx; keep helpers local to this file.
 
 
 //
@@ -633,6 +631,9 @@ function HomeContent() {
     return `${window.location.origin}/?ref=${userId !== "anon" ? userId : "your-id"}`;
   }, [userId]);
 
+  // Accessible status region
+  const [statusMessage, setStatusMessage] = useState<string>("");
+
   // Has free tier export limit been reached?
   const isFreeLimitReached = !isPro && exportCount >= FREE_EXPORT_LIMIT;
 
@@ -717,15 +718,28 @@ function HomeContent() {
       try {
         const formData = new FormData();
         if (inputMode === "url") {
-          formData.append("productUrl", productUrl);
+          try {
+            const url = new URL(productUrl);
+            formData.append("productUrl", url.toString());
+          } catch {
+            setError("Please enter a valid URL (including https://)");
+            setLoading(false);
+            return;
+          }
         } else {
-          formData.append("description", description);
+          const clean = DOMPurify.sanitize(description);
+          formData.append("description", clean);
           if (image) formData.append("image", image);
         }
         formData.append("tone", tone);
         formData.append("platform", platform);
         formData.append("length", length);
 
+        if (!canPerform("generate_script")) {
+          setError("You are doing that too quickly. Please wait a moment.");
+          setLoading(false);
+          return;
+        }
         const res = await fetch("/api/generate-script", {
           method: "POST",
           body: formData,
@@ -735,11 +749,15 @@ function HomeContent() {
         if (res.ok && data.script) {
           setScript(data.script);
           setExportCount((c) => c + 1);
+          track("generate_script", { userId, platform, tone, length });
+          setStatusMessage("Script generated successfully.");
         } else {
           setError(handleApiError(data, "Failed to generate script."));
+          setStatusMessage("Script generation failed.");
         }
       } catch (err) {
         setError(handleApiError(err, "Network error. Please try again."));
+        setStatusMessage("Network error while generating script.");
       } finally {
         setLoading(false);
       }
@@ -754,6 +772,10 @@ function HomeContent() {
       return;
     }
 
+    if (!canPerform("generate_voice")) {
+      setVoiceError("You are doing that too quickly. Please wait a moment.");
+      return;
+    }
     setVoiceLoading(true);
     setVoiceError(null);
     setAudioUrl(null);
@@ -764,7 +786,7 @@ function HomeContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          script: script.join(" "),
+          script: DOMPurify.sanitize(script.join(" ")),
           voiceStyle,
         }),
       });
@@ -777,6 +799,7 @@ function HomeContent() {
         try {
           const blob = await (await fetch(data.audioUrl)).blob();
           const file = new File([blob], `voiceover-${Date.now()}.mp3`, { type: "audio/mpeg" });
+          if (!supabase) throw new Error("Supabase client not configured");
           const { data: uploadData, error: uploadError } = await supabase.storage
             .from("pitches")
             .upload(`${userId}/voiceover-${Date.now()}.mp3`, file, { upsert: true });
@@ -789,11 +812,15 @@ function HomeContent() {
         }
 
         setExportCount((c) => c + 1);
+        track("generate_voice", { userId, voiceStyle });
+        setStatusMessage("Voiceover generated.");
       } else {
         setVoiceError(handleApiError(data, "Failed to generate voiceover."));
+        setStatusMessage("Voiceover generation failed.");
       }
     } catch (err) {
       setVoiceError(handleApiError(err, "Network error. Please try again."));
+      setStatusMessage("Network error while generating voiceover.");
     } finally {
       setVoiceLoading(false);
     }
@@ -806,6 +833,10 @@ function HomeContent() {
       return;
     }
 
+    if (!canPerform("generate_video")) {
+      setVideoError("You are doing that too quickly. Please wait a moment.");
+      return;
+    }
     setVideoLoading(true);
     setVideoError(null);
     setVideoUrl(null);
@@ -816,7 +847,7 @@ function HomeContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          script: script.join(" "),
+          script: DOMPurify.sanitize(script.join(" ")),
           voiceStyle,
         }),
       });
@@ -829,6 +860,7 @@ function HomeContent() {
         try {
           const blob = await (await fetch(data.videoUrl)).blob();
           const file = new File([blob], `video-${Date.now()}.mp4`, { type: "video/mp4" });
+          if (!supabase) throw new Error("Supabase client not configured");
           const { data: uploadData, error: uploadError } = await supabase.storage
             .from("pitches")
             .upload(`${userId}/video-${Date.now()}.mp4`, file, { upsert: true });
@@ -841,11 +873,15 @@ function HomeContent() {
         }
 
         setExportCount((c) => c + 1);
+        track("generate_video", { userId, voiceStyle });
+        setStatusMessage("Video preview generated.");
       } else {
         setVideoError(handleApiError(data, "Failed to generate video preview."));
+        setStatusMessage("Video generation failed.");
       }
     } catch (err) {
       setVideoError(handleApiError(err, "Network error. Please try again."));
+      setStatusMessage("Network error while generating video.");
     } finally {
       setVideoLoading(false);
     }
@@ -944,6 +980,9 @@ function HomeContent() {
             />
           )}
         </AnimatePresence>
+
+        {/* aria-live region for assistive tech */}
+        <div aria-live="polite" className="sr-only" role="status">{statusMessage}</div>
 
         {/* Form header and controls (see your original form JSX) */}
 

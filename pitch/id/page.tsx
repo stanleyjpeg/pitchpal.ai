@@ -19,6 +19,11 @@ export default function PublicPitchPage() {
 
   useEffect(() => {
     const fetchPitch = async () => {
+      if (!supabase) {
+        console.warn("Supabase client not configured; cannot load pitch.");
+        setLoading(false);
+        return;
+      }
       const { data, error } = await supabase
         .from("pitches")
         .select("*")

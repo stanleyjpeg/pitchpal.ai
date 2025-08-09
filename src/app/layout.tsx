@@ -46,8 +46,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body className="bg-background text-foreground min-h-screen">
+      <html lang="en" className="h-full">
+        <body className="bg-background text-foreground min-h-screen h-full">
           <DarkModeToggle />
           {children}
         </body>
@@ -55,3 +55,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </ClerkProvider>
   );
 }
+

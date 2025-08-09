@@ -10,11 +10,9 @@ type Pitch = {
   created_at: string;
 };
 
-interface DashboardProps {
-  pitches: Pitch[];
-}
+// removed unused DashboardProps interface
 
-export default function Dashboard({ pitches }: { pitches: any[] }) {
+export default function Dashboard({ pitches }: { pitches: Pitch[] }) {
   return (
     <div className="min-h-screen w-full flex flex-col p-6">
       <h1 className="text-3xl font-bold mb-6">Your Pitches</h1>
@@ -23,7 +21,7 @@ export default function Dashboard({ pitches }: { pitches: any[] }) {
           <p className="text-gray-500">No pitches yet.</p>
         ) : (
           <ul className="space-y-4">
-            {pitches.map((pitch) => (
+            {pitches.map((pitch: Pitch) => (
               <li key={pitch.id} className="p-4 bg-white rounded shadow">
                 {pitch.title}
               </li>

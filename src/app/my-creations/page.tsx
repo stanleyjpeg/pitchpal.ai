@@ -13,14 +13,18 @@ export default function MyCreationsPage() {
   useEffect(() => {
     if (!isLoaded || !isSignedIn) return;
     const fetchFiles = async () => {
+      if (!supabase) {
+        setError("Storage is not configured.");
+        return;
+      }
       setLoading(true);
       setError(null);
       try {
         const { data, error } = await supabase.storage.from("pitches").list(`${user.id}/`, { limit: 100 });
         if (error) throw error;
         setFiles(data || []);
-              } catch (err: unknown) {
-          setError(err instanceof Error ? err.message : "Failed to load files.");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to load files.");
       } finally {
         setLoading(false);
       }
@@ -30,6 +34,7 @@ export default function MyCreationsPage() {
 
   const handleDownload = async (name: string) => {
     if (!user) return;
+    if (!supabase) return;
     const { data, error } = await supabase.storage.from("pitches").download(`${user.id}/${name}`);
     if (error) return alert("Download failed");
     const url = URL.createObjectURL(data);
@@ -43,6 +48,7 @@ export default function MyCreationsPage() {
   const handleDelete = async (name: string) => {
     if (!user) return;
     if (!confirm(`Delete ${name}?`)) return;
+    if (!supabase) return;
     const { error } = await supabase.storage.from("pitches").remove([`${user.id}/${name}`]);
     if (error) return alert("Delete failed");
     setFiles(files.filter(f => f.name !== name));

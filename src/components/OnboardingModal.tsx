@@ -46,41 +46,72 @@ function OnboardingModal({ onClose }: { onClose: () => void }) {
       <div
         style={{
           backgroundColor: "white",
-          borderRadius: 12,
-          padding: 24,
-          maxWidth: 400,
-          width: "90%",
-          boxShadow: "0 0 20px rgba(0,0,0,0.25)",
+          borderRadius: 0,
+          padding: 32,
+          maxWidth: "100%",
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          boxShadow: "0 0 0 rgba(0,0,0,0)",
         }}
       >
-        <div style={{ fontSize: "3rem", textAlign: "center" }}>
+        <div style={{ fontSize: "4rem", textAlign: "center" }}>
           {steps[step].emoji}
         </div>
-        <h2 style={{ marginTop: 16, textAlign: "center" }}>{steps[step].title}</h2>
-        <p style={{ marginTop: 8, textAlign: "center", color: "#555" }}>
+        <h2 style={{ marginTop: 16, textAlign: "center", fontSize: 28 }}>{steps[step].title}</h2>
+        <p style={{ marginTop: 8, textAlign: "center", color: "#555", maxWidth: 720 }}>
           {steps[step].desc}
         </p>
 
         <div
           style={{
-            marginTop: 24,
+            marginTop: 32,
             display: "flex",
-            justifyContent: "space-between",
+            gap: 12,
+            justifyContent: "center",
           }}
         >
           <button
             disabled={isFirst}
             onClick={() => setStep((s) => Math.max(s - 1, 0))}
-            style={{ opacity: isFirst ? 0.5 : 1 }}
+            style={{
+              opacity: isFirst ? 0.5 : 1,
+              padding: "10px 16px",
+              borderRadius: 12,
+              background: "#e5e7eb",
+            }}
           >
             Back
           </button>
           {!isLast && (
-            <button onClick={() => setStep((s) => Math.min(s + 1, steps.length - 1))}>
+            <button
+              onClick={() => setStep((s) => Math.min(s + 1, steps.length - 1))}
+              style={{
+                padding: "10px 16px",
+                borderRadius: 12,
+                background: "#4f46e5",
+                color: "white",
+              }}
+            >
               Next
             </button>
           )}
-          {isLast && <button onClick={onClose}>Finish</button>}
+          {isLast && (
+            <button
+              onClick={onClose}
+              style={{
+                padding: "10px 16px",
+                borderRadius: 12,
+                background: "#111827",
+                color: "white",
+              }}
+            >
+              Finish
+            </button>
+          )}
         </div>
       </div>
     </div>
