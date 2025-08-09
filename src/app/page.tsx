@@ -175,7 +175,7 @@ function OnboardingModal({ onClose }: { onClose: () => void }) {
     <motion.div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -646,6 +646,18 @@ function HomeContent() {
     }
   }, [mounted, onboardingComplete]);
 
+  // Lock background scroll while onboarding is open
+  React.useEffect(() => {
+    if (!mounted) return;
+    if (showOnboarding) {
+      const original = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = original;
+      };
+    }
+  }, [mounted, showOnboarding]);
+
   // Autofill description if "template" query param present
   useEffect(() => {
     if (mounted && searchParams) {
@@ -939,7 +951,7 @@ function HomeContent() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-zinc-50 via-white to-indigo-100 dark:from-zinc-900 dark:via-zinc-950 dark:to-indigo-950 px-4 py-10">
       {/* Banner */}
-      {showBanner && (
+      {!showOnboarding && showBanner && (
         <motion.div
           className="fixed top-0 left-0 w-full z-50 bg-indigo-700 text-white flex flex-col sm:flex-row items-center justify-center gap-4 px-4 py-3 shadow-lg"
           initial={{ y: -60, opacity: 0 }}
