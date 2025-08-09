@@ -7,6 +7,7 @@ import { supabase } from "../lib/supabase";
 import { useUser, useAuth } from "@clerk/nextjs";
 import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
+import OnboardingModal from "../components/OnboardingModal";
 import { track } from "../lib/analytics";
 
 // Dynamically import ProModal and icons with SSR disabled for smaller bundles
@@ -140,104 +141,6 @@ function Testimonial({
   );
 }
 
-//
-// Onboarding modal component
-//
-function OnboardingModal({ onClose }: { onClose: () => void }) {
-  const steps = [
-    {
-      emoji: "👋",
-      title: "Welcome to PitchPal!",
-      desc: "PitchPal helps you create persuasive product pitches in seconds. Let's get started!",
-    },
-    {
-      emoji: "🔗",
-      title: "Paste a Product Link or Description",
-      desc: "Just drop in your Shopify, TikTok, or Etsy link—or write a quick description of your product.",
-    },
-    {
-      emoji: "✨",
-      title: "Pick Your Style & Platform",
-      desc: "Choose your tone, platform, and pitch length. Tailor your pitch for TikTok, IG Reels, or a landing page.",
-    },
-    {
-      emoji: "🚀",
-      title: "Generate & Export Instantly",
-      desc: "Get your AI-generated script, voiceover, and video preview. Edit, download, or share with one click!",
-    },
-  ];
-
-  const [step, setStep] = useState(0);
-  const isLast = step === steps.length - 1;
-  const isFirst = step === 0;
-
-  return (
-    <motion.div
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.25 }}
-    >
-        <motion.div
-          className="bg-white dark:bg-zinc-900 rounded-none shadow-none p-8 max-w-none w-full h-full flex flex-col items-center justify-center gap-6"
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        transition={{ duration: 0.25 }}
-      >
-        <div className="flex flex-col items-center gap-2 text-center">
-          <span className="text-3xl" aria-hidden="true">{steps[step].emoji}</span>
-          <h2 className="text-xl font-bold mb-1">{steps[step].title}</h2>
-          <p className="text-zinc-700 dark:text-zinc-200">{steps[step].desc}</p>
-        </div>
-        <div className="flex gap-2 w-full justify-between mt-2">
-          <button
-            className="rounded-xl bg-zinc-200 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 px-4 py-2 font-medium text-base hover:bg-zinc-300 dark:hover:bg-zinc-600 transition disabled:opacity-50"
-            type="button"
-            onClick={() => setStep(s => Math.max(0, s - 1))}
-            disabled={isFirst}
-            aria-disabled={isFirst}
-            aria-label="Back"
-          >
-            Back
-          </button>
-          {!isLast ? (
-            <button
-              className="rounded-xl bg-indigo-600 text-white px-4 py-2 font-medium text-base hover:bg-indigo-500 transition"
-              type="button"
-              onClick={() => setStep(s => Math.min(steps.length - 1, s + 1))}
-              aria-label="Next"
-            >
-              Next
-            </button>
-          ) : (
-            <button
-              className="rounded-xl bg-zinc-900 text-white px-6 py-2 font-semibold text-base hover:bg-zinc-700 transition"
-              type="button"
-              onClick={onClose}
-              aria-label="Get Started"
-            >
-              Get Started
-            </button>
-          )}
-        </div>
-        <div className="flex gap-1 mt-2" aria-label="Progress steps">
-          {steps.map((_, i) => (
-            <span
-              key={i}
-              className={`inline-block w-2 h-2 rounded-full ${
-                i === step ? "bg-indigo-600" : "bg-zinc-300 dark:bg-zinc-700"
-              }`}
-            />
-          ))}
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
 
 //
 // Limit modal for free tier export limits
