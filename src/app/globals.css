@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* You can also paste your custom CSS here: */
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -13,6 +12,20 @@
     --background: #0a0a0a;
     --foreground: #ededed;
   }
+}
+
+/* Ensure Tailwind's min-h-screen fills the viewport */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Make the root app container fill height */
+#__next, /* Next.js root */
+#root {   /* React root */
+  height: 100%;
 }
 
 body {
