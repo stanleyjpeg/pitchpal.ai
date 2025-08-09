@@ -7,7 +7,6 @@ import { supabase } from "../lib/supabase";
 import { useUser, useAuth } from "@clerk/nextjs";
 import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import DOMPurify from "isomorphic-dompurify";
 import { track } from "../lib/analytics";
 
 // Dynamically import ProModal and icons with SSR disabled for smaller bundles
@@ -727,8 +726,13 @@ function HomeContent() {
             return;
           }
         } else {
-          const clean = DOMPurify.sanitize(description);
-          formData.append("description", clean);
+          try {
+            const { default: DOMPurify } = await import("dompurify");
+            const clean = DOMPurify.sanitize(description);
+            formData.append("description", clean);
+          } catch {
+            formData.append("description", description);
+          }
           if (image) formData.append("image", image);
         }
         formData.append("tone", tone);
@@ -786,7 +790,17 @@ function HomeContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          script: DOMPurify.sanitize(script.join(" ")),
+          script: (() => {
+            try {
+              // best-effort client-only sanitize
+              // Note: dynamic import to avoid SSR issues
+              return (window as any).DOMPurify
+                ? (window as any).DOMPurify.sanitize(script.join(" "))
+                : script.join(" ");
+            } catch {
+              return script.join(" ");
+            }
+          })(),
           voiceStyle,
         }),
       });
@@ -847,7 +861,15 @@ function HomeContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          script: DOMPurify.sanitize(script.join(" ")),
+          script: (() => {
+            try {
+              return (window as any).DOMPurify
+                ? (window as any).DOMPurify.sanitize(script.join(" "))
+                : script.join(" ");
+            } catch {
+              return script.join(" ");
+            }
+          })(),
           voiceStyle,
         }),
       });
