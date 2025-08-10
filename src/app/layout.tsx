@@ -5,6 +5,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { DarkModeToggle } from "../components/DarkModeToggle";
 import { ToastProvider } from "../components/Toast";
 import "../styles/globals.css";
+import Head from "next/head";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,33 +48,34 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
-      <html lang="en" className="h-full">
-        <body className="bg-background text-foreground min-h-screen h-full">
-          {/* Google Analytics */}
-          {process.env.NEXT_PUBLIC_GA_ID && (
-            <>
-              <Script
-                src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
-                strategy="afterInteractive"
-              />
-              <Script id="ga-init" strategy="afterInteractive">
-                {`
-                  window.dataLayer = window.dataLayer || [];
-                  function gtag(){dataLayer.push(arguments);}
-                  gtag('js', new Date());
-                  gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}');
-                `}
-              </Script>
-            </>
-          )}
-          <ToastProvider>
-            <DarkModeToggle />
-            {children}
-          </ToastProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+    <>
+      <Head>
+        <title>PitchPal – AI-Powered Voice & Video Pitches</title>
+        <meta name="description" content="Create persuasive product pitches in seconds with AI-powered voice and video. Paste your product link, pick your style, and get a compelling pitch instantly!" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://cool-flan-7be6b6.netlify.app/" />
+        <meta property="og:title" content="PitchPal – AI-Powered Voice & Video Pitches" />
+        <meta property="og:description" content="Create persuasive product pitches in seconds with AI-powered voice and video. Paste your product link, pick your style, and get a compelling pitch instantly!" />
+        <meta property="og:image" content="/logo.svg" />
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="PitchPal – AI-Powered Voice & Video Pitches" />
+        <meta name="twitter:description" content="Create persuasive product pitches in seconds with AI-powered voice and video. Paste your product link, pick your style, and get a compelling pitch instantly!" />
+        <meta name="twitter:image" content="/logo.svg" />
+      </Head>
+      <ClerkProvider>
+        <html lang="en" className="h-full">
+          <body className="bg-background text-foreground min-h-screen h-full">
+            <ToastProvider>
+              <DarkModeToggle />
+              {children}
+            </ToastProvider>
+          </body>
+        </html>
+      </ClerkProvider>
+    </>
   );
 }
 

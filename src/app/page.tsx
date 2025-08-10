@@ -961,6 +961,16 @@ function HomeContent() {
         onClose={() => setShowProModal(false)}
         onSuccess={setProInClerk}
       />
+      {/* Show Onboarding button (top-right corner) */}
+      {onboardingComplete && !showOnboarding && (
+        <button
+          onClick={() => setShowOnboarding(true)}
+          className="fixed top-4 right-4 z-50 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-full shadow-lg transition focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          aria-label="Show onboarding instructions"
+        >
+          Show Onboarding
+        </button>
+      )}
     </div>
   );
 }

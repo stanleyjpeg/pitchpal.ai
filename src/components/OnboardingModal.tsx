@@ -1,120 +1,103 @@
-import { useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import { motion } from "framer-motion";
+
 
 function OnboardingModal({ onClose }: { onClose: () => void }) {
-  const steps = [
-    {
-      emoji: "👋",
-      title: "Welcome to PitchPal!",
-      desc: "PitchPal helps you create persuasive product pitches in seconds. Let's get started!",
-    },
-    {
-      emoji: "🔗",
-      title: "Paste a Product Link or Description",
-      desc: "Just drop in your Shopify, TikTok, or Etsy link—or write a quick description of your product.",
-    },
-    {
-      emoji: "✨",
-      title: "Pick Your Style & Platform",
-      desc: "Choose your tone, platform, and pitch length. Tailor your pitch for TikTok, IG Reels, or a landing page.",
-    },
-    {
-      emoji: "🚀",
-      title: "Generate & Export Instantly",
-      desc: "Get your AI-generated script, voiceover, and video preview. Edit, download, or share with one click!",
-    },
-  ];
+  // Show modal by default
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previouslyFocused = useRef<HTMLElement | null>(null);
 
-  const [step, setStep] = useState(0);
-  const isLast = step === steps.length - 1;
-  const isFirst = step === 0;
+  // Focus trap
+  useEffect(() => {
+    previouslyFocused.current = (document.activeElement as HTMLElement) ?? null;
+    dialogRef.current?.focus();
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      const root = dialogRef.current;
+      if (!root) return;
+      const focusables = root.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const list = Array.from(focusables).filter(el => !el.hasAttribute("disabled"));
+      if (list.length === 0) return;
+      const first = list[0];
+      const last = list[list.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          last.focus();
+          e.preventDefault();
+        }
+      } else if (document.activeElement === last) {
+        first.focus();
+        e.preventDefault();
+      }
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+      previouslyFocused.current?.focus?.();
+    };
+  }, []);
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        height: "100vh",
-        width: "100vw",
-        backgroundColor: "rgba(0,0,0,0.5)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 1000,
-      }}
+    <motion.div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="onboarding-title"
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div
-        style={{
-          backgroundColor: "white",
-          borderRadius: 0,
-          padding: 32,
-          maxWidth: "100%",
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          boxShadow: "0 0 0 rgba(0,0,0,0)",
-        }}
+      <motion.div
+        ref={dialogRef}
+        tabIndex={-1}
+        className="relative bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-0 max-w-4xl w-full flex flex-col items-center border-2 border-indigo-200 dark:border-indigo-700 overflow-hidden animate-fadeIn"
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        transition={{ duration: 0.3, type: "spring", damping: 25, stiffness: 300 }}
+        onClick={(e) => e.stopPropagation()}
+        aria-labelledby="onboarding-title"
       >
-        <div style={{ fontSize: "4rem", textAlign: "center" }}>
-          {steps[step].emoji}
+        {/* Logo at the top */}
+        <div className="w-full flex justify-center bg-gradient-to-r from-indigo-500 to-purple-500 py-12 px-4">
+          <img src="/logo.svg" alt="PitchPal Logo" className="h-28 w-28 drop-shadow-xl" />
         </div>
-        <h2 style={{ marginTop: 16, textAlign: "center", fontSize: 28 }}>{steps[step].title}</h2>
-        <p style={{ marginTop: 8, textAlign: "center", color: "#555", maxWidth: 720 }}>
-          {steps[step].desc}
-        </p>
-
-        <div
-          style={{
-            marginTop: 32,
-            display: "flex",
-            gap: 12,
-            justifyContent: "center",
-          }}
+        <button
+          onClick={onClose}
+          className="absolute top-6 right-6 text-zinc-400 hover:text-zinc-700 dark:hover:text-white transition-colors focus:outline-none"
+          aria-label="Close onboarding"
         >
+          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <div className="flex flex-col items-center gap-4 px-8 py-12 w-full max-w-2xl">
+          <h2 id="onboarding-title" className="text-4xl font-extrabold text-center text-zinc-900 dark:text-white mb-2 tracking-tight">
+            Welcome to PitchPal!
+          </h2>
+          <p className="text-lg text-zinc-600 dark:text-zinc-300 text-center mb-4 max-w-xl">
+            Your AI-powered pitch creation assistant. Let's get you started!
+          </p>
+          <ol className="list-decimal list-inside text-left text-zinc-700 dark:text-zinc-200 space-y-2 text-lg w-full max-w-lg mx-auto">
+            <li>Paste a product link or description (Shopify, TikTok, Etsy, or your own).</li>
+            <li>Pick your style, platform, and pitch length.</li>
+            <li>Generate your script, voiceover, and video preview instantly.</li>
+            <li>Edit, download, or share your pitch with one click!</li>
+          </ol>
           <button
-            disabled={isFirst}
-            onClick={() => setStep((s) => Math.max(s - 1, 0))}
-            style={{
-              opacity: isFirst ? 0.5 : 1,
-              padding: "10px 16px",
-              borderRadius: 12,
-              background: "#e5e7eb",
-            }}
+            className="mt-8 px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-bold text-lg shadow-lg hover:from-indigo-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 transition-all duration-200"
+            onClick={onClose}
+            autoFocus
           >
-            Back
+            Get Started
           </button>
-          {!isLast && (
-            <button
-              onClick={() => setStep((s) => Math.min(s + 1, steps.length - 1))}
-              style={{
-                padding: "10px 16px",
-                borderRadius: 12,
-                background: "#4f46e5",
-                color: "white",
-              }}
-            >
-              Next
-            </button>
-          )}
-          {isLast && (
-            <button
-              onClick={onClose}
-              style={{
-                padding: "10px 16px",
-                borderRadius: 12,
-                background: "#111827",
-                color: "white",
-              }}
-            >
-              Finish
-            </button>
-          )}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 

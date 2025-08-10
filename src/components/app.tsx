@@ -1,23 +1,45 @@
-import React from "react";
-import Navbar from "../components/navbar";
-import Hero from "../components/hero";
-import StepProgress from "../components/stepProgress";
-import ScriptEditor from "../components/ScriptEditor";
+import React, { useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-// Inside your main component
+import WaitlistPage from "./WaitlistPage";
+// @ts-expect-error: Dashboard module may not exist yet
+import Dashboard from "./Dashboard";
 
-
+const samplePitches = [
+  { id: "1", title: "First pitch", created_at: "2025-08-10" },
+  { id: "2", title: "Second pitch", created_at: "2025-08-09" },
+];
 
 export default function App() {
+  const [userSignedUp, setUserSignedUp] = useState(false);
+
+  const handleSignUp = () => setUserSignedUp(true);
+
   return (
-    <>
-      <Navbar />
-      <Hero />
-      <StepProgress step={1} />
-      <div className="max-w-5xl mx-auto w-full p-4 sm:p-6 md:p-8 bg-white/5 rounded-3xl border border-white/10 shadow-2xl backdrop-blur">
-        <ScriptEditor />
-      </div>
-      {/* Add Features, Gallery, Testimonials, Rewards */}
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            userSignedUp ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <WaitlistPage onSignUp={handleSignUp} />
+            )
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            userSignedUp ? (
+              <Dashboard pitches={samplePitches} />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }

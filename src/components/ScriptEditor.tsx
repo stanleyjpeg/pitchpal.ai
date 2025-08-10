@@ -87,41 +87,43 @@ export default function ScriptEditor() {
   };
 
   return (
-    <section className="max-w-4xl mx-auto p-6 bg-white/90 dark:bg-zinc-900/90 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xl">
-      <h2 className="text-2xl font-bold mb-4">🎤 Your Pitch Script</h2>
+    <section className="max-w-4xl mx-auto p-8 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl mt-8">
+      <h2 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white flex items-center gap-2">
+        <span role="img" aria-label="microphone">🎤</span> Your Pitch Script
+      </h2>
 
       <textarea
-        className="w-full min-h-[140px] p-3 border rounded-md text-gray-800 font-mono"
+        className="w-full min-h-[140px] p-4 border border-gray-300 dark:border-zinc-700 rounded-lg text-gray-800 dark:text-gray-100 font-mono bg-gray-50 dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition mb-4 text-base"
         value={script}
         onChange={(e) => setScript(e.target.value)}
+        aria-label="Pitch script editor"
       />
 
-      <div className="flex flex-wrap gap-3 mt-4">
+      <div className="flex flex-wrap gap-4 mt-2">
         <button
           onClick={() => handleAIAction("improve")}
-          className="btn-brand px-4 py-2 rounded"
+          className="bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 text-white px-5 py-2 rounded-lg font-semibold transition disabled:opacity-50"
           disabled={loading}
         >
           ✨ Improve
         </button>
         <button
           onClick={() => handleAIAction("regenerate")}
-          className="btn-outline px-4 py-2 rounded"
+          className="bg-gray-200 dark:bg-zinc-700 hover:bg-gray-300 dark:hover:bg-zinc-600 focus:ring-4 focus:ring-indigo-200 text-gray-800 dark:text-gray-100 px-5 py-2 rounded-lg font-semibold transition disabled:opacity-50"
           disabled={loading}
         >
           🔁 Regenerate
         </button>
         <button
           onClick={() => handleAIAction("tone")}
-          className="btn-brand px-4 py-2 rounded"
+          className="bg-purple-600 hover:bg-purple-700 focus:ring-4 focus:ring-purple-300 text-white px-5 py-2 rounded-lg font-semibold transition disabled:opacity-50"
           disabled={loading}
         >
           🎯 Change Tone
         </button>
-
         <button
           onClick={handleManualSave}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          className="bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-300 text-white px-5 py-2 rounded-lg font-semibold transition disabled:opacity-50"
           disabled={loading}
         >
           💾 Save & Share
@@ -129,20 +131,20 @@ export default function ScriptEditor() {
       </div>
 
       {loading && (
-        <div className="mt-4 space-y-3">
-          <div className="h-4 rounded skeleton skeleton-dark" />
-          <div className="h-4 rounded skeleton skeleton-dark w-5/6" />
-          <div className="h-4 rounded skeleton skeleton-dark w-2/3" />
+        <div className="mt-6 space-y-3 animate-pulse">
+          <div className="h-4 rounded bg-gray-200 dark:bg-zinc-700 w-full" />
+          <div className="h-4 rounded bg-gray-200 dark:bg-zinc-700 w-5/6" />
+          <div className="h-4 rounded bg-gray-200 dark:bg-zinc-700 w-2/3" />
         </div>
       )}
 
       {savedId && (
-        <div className="mt-4">
+        <div className="mt-6">
           <a
             href={`/pitch/${savedId}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block bg-zinc-800 text-white px-4 py-2 rounded hover:bg-zinc-700"
+            className="inline-block bg-zinc-800 text-white px-5 py-2 rounded-lg hover:bg-zinc-700 transition"
           >
             🔗 View & Share Pitch
           </a>
