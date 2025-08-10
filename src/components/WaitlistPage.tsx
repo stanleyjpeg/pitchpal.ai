@@ -1,5 +1,10 @@
 
-export default function WaitlistPage() {
+type WaitlistPageProps = {
+  onSignUp?: () => void;
+};
+
+export default function WaitlistPage({ onSignUp }: WaitlistPageProps) {
+  // You can call onSignUp() after successful form submit if needed
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-tr from-indigo-50 via-purple-50 to-pink-50 px-2 sm:px-4">
       <div className="bg-white/90 dark:bg-gray-900/90 p-8 sm:p-10 rounded-2xl shadow-lg max-w-md w-full text-center border border-gray-100 dark:border-gray-800 transition-shadow hover:shadow-2xl backdrop-blur">

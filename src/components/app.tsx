@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import WaitlistPage from "./WaitlistPage";
-// @ts-expect-error: Dashboard module may not exist yet
 import Dashboard from "./Dashboard";
 
 const samplePitches = [

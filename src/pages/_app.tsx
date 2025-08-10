@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import Script from "next/script";
+
+import { ToastProvider } from "../components/Toast";
 import type { AppProps } from "next/app";
 
 function MyApp({ Component, pageProps }: AppProps) {
@@ -35,7 +37,9 @@ function MyApp({ Component, pageProps }: AppProps) {
           gtag('config', 'G-C2C003JK2X');
         `}
       </Script>
-      <Component {...pageProps} />
+      <ToastProvider>
+        <Component {...pageProps} />
+      </ToastProvider>
     </>
   );
 }

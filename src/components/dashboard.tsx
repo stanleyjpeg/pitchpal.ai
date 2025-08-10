@@ -8,8 +8,12 @@ type Pitch = {
   created_at: string;
 };
 
-export default function Dashboard() {
-  const [pitches, setPitches] = useState<Pitch[]>([]);
+type DashboardProps = {
+  pitches?: Pitch[];
+};
+
+export default function Dashboard({ pitches: initialPitches }: DashboardProps) {
+  const [pitches, setPitches] = useState<Pitch[]>(initialPitches || []);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(true);
