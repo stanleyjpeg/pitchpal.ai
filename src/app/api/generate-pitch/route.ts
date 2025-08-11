@@ -1,6 +1,6 @@
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 import OpenAI from "openai";
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import { randomUUID } from "crypto";

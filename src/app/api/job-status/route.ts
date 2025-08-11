@@ -1,6 +1,6 @@
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
