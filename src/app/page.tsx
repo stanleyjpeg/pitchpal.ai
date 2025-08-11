@@ -507,9 +507,9 @@ function HomeContent() {
   const [productUrl, setProductUrl] = useState("");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState<File | null>(null);
-  const [tone, setTone] = useState(TONES[0]);
-  const [platform, setPlatform] = useState(PLATFORMS[0]);
-  const [length, setLength] = useState(LENGTHS[0]);
+  const [tone, setTone] = useState<(typeof TONES)[number]>(TONES[0]);
+  const [platform, setPlatform] = useState<(typeof PLATFORMS)[number]>(PLATFORMS[0]);
+  const [length, setLength] = useState<(typeof LENGTHS)[number]>(LENGTHS[0]);
 
   // Loading and error states
   const [loading, setLoading] = useState(false);
@@ -605,6 +605,88 @@ function HomeContent() {
     setShowOnboarding(false);
     setOnboardingComplete(true);
   }, [setOnboardingComplete]);
+
+  // Onboarding -> generate directly
+  const handleOnboardingSubmit = useCallback(async (data: {
+    productUrl?: string;
+    description?: string;
+    audience?: string; // currently informational only
+    tone: string;
+    platform: string;
+    length: string;
+  }) => {
+    if (isFreeLimitReached) {
+      setShowLimitModal(true);
+      return;
+    }
+
+    // apply selections to UI state
+    setTone(data.tone as (typeof TONES)[number]);
+    setPlatform(data.platform as (typeof PLATFORMS)[number]);
+    setLength(data.length as (typeof LENGTHS)[number]);
+    if (data.productUrl) setProductUrl(data.productUrl);
+    if (data.description) setDescription(data.description);
+
+    setShowOnboarding(false);
+    setOnboardingComplete(true);
+
+    setLoading(true);
+    setError(null);
+    setScript([]);
+    setAudioUrl(null);
+    setAudioSupabaseUrl(null);
+    setVoiceError(null);
+    setVideoUrl(null);
+    setVideoSupabaseUrl(null);
+    setVideoError(null);
+
+    try {
+      const formData = new FormData();
+      if (data.productUrl) {
+        try {
+          const url = new URL(data.productUrl);
+          formData.append("productUrl", url.toString());
+        } catch {
+          setError("Please enter a valid URL (including https://)");
+          setLoading(false);
+          return;
+        }
+      }
+      if (data.description && !data.productUrl) {
+        formData.append("description", data.description);
+      }
+      formData.append("tone", data.tone);
+      formData.append("platform", data.platform);
+      formData.append("length", data.length);
+
+      if (!canPerform("generate_script")) {
+        setError("You are doing that too quickly. Please wait a moment.");
+        setLoading(false);
+        return;
+      }
+
+      const res = await fetch("/api/generate-script", {
+        method: "POST",
+        body: formData,
+      });
+      const dataRes = await res.json();
+
+      if (res.ok && dataRes.script) {
+        setScript(dataRes.script);
+        setExportCount((c) => c + 1);
+        track("generate_script", { userId, platform: data.platform, tone: data.tone, length: data.length });
+        setStatusMessage("Script generated successfully.");
+      } else {
+        setError(handleApiError(dataRes, "Failed to generate script."));
+        setStatusMessage("Script generation failed.");
+      }
+    } catch (err) {
+      setError(handleApiError(err, "Network error. Please try again."));
+      setStatusMessage("Network error while generating script.");
+    } finally {
+      setLoading(false);
+    }
+  }, [isFreeLimitReached, setOnboardingComplete, userId]);
 
   const handleScriptChange = useCallback((idx: number, value: string) => {
     setScript((prev) => prev.map((line, i) => (i === idx ? value : line)));
@@ -772,50 +854,76 @@ function HomeContent() {
     setVideoSupabaseUrl(null);
 
     try {
-      const res = await fetch("/api/generate-video", {
+      // 1) Enqueue job via SQS-backed API
+      const enqueueBody = {
+        product: productUrl || (description ? description.slice(0, 120) : "Product"),
+        audience: "general audience",
+        tone: voiceStyle?.includes("formal") ? "professional" : "casual",
+        platform: platform || "TikTok",
+        imageUrl: undefined as string | undefined,
+      };
+      const enqueueRes = await fetch("/api/generate-pitch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          script: (() => {
-            try {
-              return (window as any).DOMPurify
-                ? (window as any).DOMPurify.sanitize(script.join(" "))
-                : script.join(" ");
-            } catch {
-              return script.join(" ");
-            }
-          })(),
-          voiceStyle,
-        }),
+        body: JSON.stringify(enqueueBody),
       });
-      const data = await res.json();
-
-      if (res.ok && data.videoUrl) {
-        setVideoUrl(data.videoUrl);
-
-        // Upload video to Supabase
-        try {
-          const blob = await (await fetch(data.videoUrl)).blob();
-          const file = new File([blob], `video-${Date.now()}.mp4`, { type: "video/mp4" });
-          if (!supabase) throw new Error("Supabase client not configured");
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from("pitches")
-            .upload(`${userId}/video-${Date.now()}.mp4`, file, { upsert: true });
-          if (!uploadError && uploadData) {
-            const { data: publicUrlData } = supabase.storage.from("pitches").getPublicUrl(uploadData.path);
-            setVideoSupabaseUrl(publicUrlData.publicUrl);
-          }
-        } catch (uploadErr) {
-          console.warn("Supabase upload failed:", uploadErr);
-        }
-
-        setExportCount((c) => c + 1);
-        track("generate_video", { userId, voiceStyle });
-        setStatusMessage("Video preview generated.");
-      } else {
-        setVideoError(handleApiError(data, "Failed to generate video preview."));
-        setStatusMessage("Video generation failed.");
+      const enqueueJson = await enqueueRes.json();
+      if (!enqueueRes.ok || !enqueueJson.jobId) {
+        setVideoError(handleApiError(enqueueJson, "Failed to enqueue video job."));
+        setStatusMessage("Video job enqueue failed.");
+        setVideoLoading(false);
+        return;
       }
+
+      // If API returned a fresh pitch and current script is empty, populate it for UX
+      if ((!script || script.length === 0) && enqueueJson.pitch) {
+        setScript(enqueueJson.pitch.split(/\n+/).map((s: string) => s.trim()).filter(Boolean));
+      }
+
+      const jobId: string = enqueueJson.jobId;
+
+      // 2) Poll job status until done or timeout
+      const started = Date.now();
+      const timeoutMs = 2 * 60 * 1000; // 2 minutes
+      let doneUrl: string | null = null;
+      while (Date.now() - started < timeoutMs) {
+        const r = await fetch(`/api/job-status?jobId=${encodeURIComponent(jobId)}`);
+        const j = await r.json();
+        if (r.status === 200 && j.status === "done" && j.result?.url) {
+          doneUrl = j.result.url as string;
+          break;
+        }
+        await new Promise(res => setTimeout(res, 2000));
+      }
+
+      if (!doneUrl) {
+        setVideoError("Timed out waiting for video. Please try again in a moment.");
+        setStatusMessage("Video generation timed out.");
+        setVideoLoading(false);
+        return;
+      }
+
+      setVideoUrl(doneUrl);
+
+      // Optional: Upload to Supabase bucket for your library
+      try {
+        const blob = await (await fetch(doneUrl)).blob();
+        const file = new File([blob], `video-${Date.now()}.mp4`, { type: "video/mp4" });
+        if (!supabase) throw new Error("Supabase client not configured");
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("pitches")
+          .upload(`${userId}/video-${Date.now()}.mp4`, file, { upsert: true });
+        if (!uploadError && uploadData) {
+          const { data: publicUrlData } = supabase.storage.from("pitches").getPublicUrl(uploadData.path);
+          setVideoSupabaseUrl(publicUrlData.publicUrl);
+        }
+      } catch (uploadErr) {
+        console.warn("Supabase upload failed:", uploadErr);
+      }
+
+      setExportCount((c) => c + 1);
+      track("generate_video", { userId, platform, tone: enqueueBody.tone, worker: true });
+      setStatusMessage("Video generated by worker.");
     } catch (err) {
       setVideoError(handleApiError(err, "Network error. Please try again."));
       setStatusMessage("Network error while generating video.");
@@ -910,7 +1018,12 @@ function HomeContent() {
         className="w-full h-full max-w-none bg-white/90 dark:bg-zinc-900/90 rounded-none shadow-none p-6 sm:p-10 flex flex-col gap-10 border-0 backdrop-blur-md"
       >
         <AnimatePresence initial={false}>
-          {showOnboarding && <OnboardingModal onClose={handleCloseOnboarding} />}
+          {showOnboarding && (
+            <OnboardingModal
+              onClose={handleCloseOnboarding}
+              onSubmit={handleOnboardingSubmit}
+            />
+          )}
           {showLimitModal && (
             <LimitModal
               open={showLimitModal}
